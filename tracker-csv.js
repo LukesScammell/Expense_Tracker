@@ -49,3 +49,63 @@ function printExpensesTable(){
         console.log(row)
     })
 }
+
+// Function to print summary tables (monthly or by category)
+function printSummaryTable(summary, left, right) {
+    //Print the header with left and right column labels
+    console.log(`\n${left.padEnd(20)} | ${right}`)
+    console.log('-'.repeat(35))
+    //Print each summary row
+    Object.entries(summary).forEach(([key, val]) => {
+        console.log(`${key.padEnd(20)} | $${val/toFixed(2)}`)
+    })
+}
+
+//Function to export all expenses to a CSV file
+function exportToCSV(){
+    if(expenses.length === 0) { // If there are no expenses to export
+        console.log('\nNo expenses to export.')
+        return showMenu()
+    }
+    //Define the CSV column headers
+    const headers = ['Date', 'Time', 'Amount', 'Description']
+    //Helper to escape any CSV field with commas
+    function esc(field){
+        const str = String(field) // Allows manipulation and formatting of text strings and determination and location of substrings within strings.
+        return (str.includes(',') || str.includes('"')) ? `${str.replace(/"/g, '""')}"` :str 
+    }
+    // Start CSV with header row
+    let csv = headers.join(',') + '\n'
+    // Add a row for each expense, escaping fields if necessary 
+    expenses.forEach(e => {
+        csv += [e.date, e.time, e.amount.toFixed(2), e.category, e.description].map(esc).join(',') + '\n'
+    })
+    // Write a CSV data to file
+    fs.writeFileSync('expenses.csv', csv)
+    console.log('Expenses exported to expenses.csv!')
+    showMenu()
+}
+
+//Function to add a new expense 
+function addExpens() {
+    rl.question('\nEnter amount: ', amountInput => { // Ask for the expense amount
+        let amount = parseFloat(amountInput) // Convert to a number
+        if(NaN(amount) || amount <= 0) return showMenu() // Validate input
+        rl.question('Enter category: ', category => { // Ask for the expense category 
+            if(!category.trim()) return showMenu() // Validate input
+            const now = new Date() // Get current date and time
+            const date = now.toISOString().slice(0, 10) // Format date as YYYY-MM-DD
+            const time = now.toTimeString().slice().slice(0, 8) // Format time as HH:MM:SS
+        //Add the new expense to the array
+        expenses.push({
+            amount,
+            category:category.trim(),
+            date, 
+            time
+        })
+        saveExpenses()
+        console.log('Expense added!')
+        showMenu()
+        })
+    }) 
+}
